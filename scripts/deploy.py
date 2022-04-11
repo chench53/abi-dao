@@ -4,10 +4,8 @@ from web3 import Web3
 from .tools import INITIAL_SUPPLE, get_account
 
 def deploy():
-    # account = get_account(id="me")
     account = get_account()
     token = AbiToken.deploy(
-        # Web3.toWei(INITIAL_SUPPLE, "ether"),
         {
             "from": account
         },
