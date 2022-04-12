@@ -1,7 +1,7 @@
 from brownie import AbiToken, config, network
 from web3 import Web3
 
-from .tools import INITIAL_SUPPLE, get_account
+from .tools import get_account
 
 def deploy():
     account = get_account()

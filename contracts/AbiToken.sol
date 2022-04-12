@@ -1,4 +1,3 @@
-// contracts/AbiToken.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -9,6 +8,7 @@ contract AbiToken is ERC20, Ownable {
 
     address public contractOwner;
     uint256 public initialSupply;
+    uint256 public supplyIncrement; 
 
     // wei
     constructor() ERC20("AbiToken", "ABI") {
@@ -18,7 +18,12 @@ contract AbiToken is ERC20, Ownable {
     }
 
     function addSupply() public {
-        _mint(contractOwner, 500);
+        _mint(contractOwner, supplyIncrement);
+    }
+
+    function setSupplyIncrement(uint256 newSupplyIncrement) public returns (uint256) {
+        supplyIncrement = newSupplyIncrement;
+        return supplyIncrement;
     }
 
     function rewward(address to) public {
@@ -29,4 +34,5 @@ contract AbiToken is ERC20, Ownable {
     function _gerRewardAmount(address to) internal returns (uint256 amount) {
         return 500;
     }
+
 }
