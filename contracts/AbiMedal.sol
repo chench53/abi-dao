@@ -36,7 +36,9 @@ contract AbiMedal is ERC721URIStorage {
         _setTokenURI(tokenId, _tokenURI);
     }
 
+    // nft is not transferable
     // function _transfer(uint256 tokenId) internal override(ERC721URIStorage) {
     //     require(false, "nft not transferable");
     // }
+
 }

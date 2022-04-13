@@ -5,8 +5,6 @@ from brownie import AbiToken, config, network
 import pytest
 from web3 import Web3
 
-# from .tools import INITIAL_SUPPLE, get_account, LOCAL_BLOCKCHAIN
-
 from scripts.deploy import deplopy_contract
 from scripts.tools import LOCAL_BLOCKCHAIN, get_account
 

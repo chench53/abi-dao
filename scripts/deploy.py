@@ -29,5 +29,7 @@ def _deploy():
 
     abi_dao_contract = deplopy_contract(AbiDao, nft_contract, time_lock_contract)
 
+    return (abi_dao_contract, nft_contract, token_contract)
+
 def main():
     _deploy()

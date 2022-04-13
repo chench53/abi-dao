@@ -8,14 +8,27 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 
+import "./AbiMedal.sol";
+import "./AbiToken.sol";
+
 contract AbiDao is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, GovernorTimelockControl {
-    constructor(IVotes _token, TimelockController _timelock)
+
+    // address nftContract;
+    AbiMedal abi_medal;
+    mapping(address => address[]) public inviteMembersMap;
+    uint32 inviteNftRequirement = 5;
+    uint256 inviteTokenRequirement = 100;
+
+    constructor(IVotes _nft, TimelockController _timelock)
         Governor("AbiDao")
         GovernorSettings(1 /* 1 block */, 45818 /* 1 week */, 1)
-        GovernorVotes(_token)
+        GovernorVotes(_nft)
         GovernorVotesQuorumFraction(66)
         GovernorTimelockControl(_timelock)
-    {}
+    {
+        // nftContract = _nft;
+        abi_medal = AbiMedal(_nft);
+    }
 
     // The following functions are overrides required by Solidity.
 
@@ -112,5 +125,25 @@ contract AbiDao is Governor, GovernorSettings, GovernorCountingSimple, GovernorV
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    function inviteNewMember(address to) public {
+        bool inviteState = false;
+
+        uint256 token_owned = abi_medal.balanceOf(msg.sender);
+        require(token_owned == 1, "requires 1 nft");
+        
+        uint256 token_owned_by_to = abi_medal.balanceOf(to);
+        require(token_owned_by_to == 0, "already got nft");
+
+        inviteMembersMap[to].push(msg.sender);
+        if (inviteMembersMap[to].length >= 5) {
+            abi_medal.createNew(to);
+            // inviteMembersMap[to] = [];
+            inviteState = true;
+        }
+        if (inviteState == true) {
+            // inviteMembersMap[to] = [];
+        }
     }
 }
