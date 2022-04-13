@@ -1,7 +1,15 @@
 """
-    brownie test tests/test_abi_dao.py 
+    brownie test tests/test_abi_dao.py -s
 """
-from brownie import AbiToken, AbiMedal, AbiDao, config, network
+from brownie import (
+    AbiToken, 
+    AbiMedal, 
+    AbiDao, 
+    config, 
+    exceptions,
+    network
+)
+from eth_typing import Address
 import pytest
 from web3 import Web3
 
@@ -11,13 +19,34 @@ from scripts.tools import LOCAL_BLOCKCHAIN, get_account
 def test_abi_dao_invite():
     if network.show_active() not in LOCAL_BLOCKCHAIN:
         pytest.skip()
-    abi_dao_contract, nft_contract, token_contract = _deploy()
+    abi_dao_contract, nft_contract, token_contract = _deploy(2)
 
     a0 = get_account()
-    a1 = get_account(1)
-    a2 = get_account(2)
-    a3 = get_account(3)
-    a4 = get_account(4) # invite this member
 
-    tx = abi_dao_contract.inviteNewMember(a4, {'from': a1})
-    tx.waits(1)
+    users = [get_account(i) for i in range(4)] # invite user[3]
+
+    with pytest.raises(exceptions.VirtualMachineError): # requires 1 nft
+        abi_dao_contract.inviteNewMember(users[3], {'from': users[1]})
+
+    nft_contract.createNew(users[1], {'from': a0}).wait(1)
+    with pytest.raises(exceptions.VirtualMachineError): # already got nft
+        abi_dao_contract.inviteNewMember(users[1], {'from': users[1]})
+
+    tx = abi_dao_contract.inviteNewMember(users[3], {'from': users[1]})
+    tx.wait(1)
+
+    inviteFrom = abi_dao_contract.inviteMembersMap(users[3].address, 0)
+    assert inviteFrom == users[1].address
+
+    # another inviter
+    nft_contract.createNew(users[2], {'from': a0}).wait(1)
+    abi_dao_contract.inviteNewMember(users[3], {'from': users[2]}).wait(1)
+
+    with pytest.raises(exceptions.VirtualMachineError): # already invited
+        tx = abi_dao_contract.inviteNewMember(users[3], {'from': users[1]})
+
+
+    assert nft_contract.balanceOf(users[3]) == 1
+
+    # inviteFrom = abi_dao_contract.inviteMembersMap(users[3].address, 0)
+    # print(inviteFrom)

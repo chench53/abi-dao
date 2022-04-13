@@ -13,21 +13,47 @@ import "./AbiToken.sol";
 
 contract AbiDao is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, GovernorTimelockControl {
 
-    // address nftContract;
     AbiMedal abi_medal;
     mapping(address => address[]) public inviteMembersMap;
-    uint32 inviteNftRequirement = 5;
-    uint256 inviteTokenRequirement = 100;
+    uint32 invite_nft_requirement;
+    uint256 invite_token_requirement;
 
-    constructor(IVotes _nft, TimelockController _timelock)
+    constructor(
+        IVotes _nft, 
+        AbiMedal _nft_, 
+        TimelockController _timelock, 
+        uint32 _inviteNftRequirement, 
+        uint256 _inviteTokenRequirement
+    )
         Governor("AbiDao")
         GovernorSettings(1 /* 1 block */, 45818 /* 1 week */, 1)
         GovernorVotes(_nft)
         GovernorVotesQuorumFraction(66)
         GovernorTimelockControl(_timelock)
     {
-        // nftContract = _nft;
-        abi_medal = AbiMedal(_nft);
+        abi_medal = AbiMedal(_nft_);
+        invite_nft_requirement = _inviteNftRequirement;
+        invite_token_requirement = _inviteTokenRequirement;
+    }
+
+    function inviteNewMember(address to) public {
+
+        uint256 token_owned = abi_medal.balanceOf(msg.sender);
+        require(token_owned == 1, "requires 1 nft");
+        
+        uint256 token_owned_by_to = abi_medal.balanceOf(to);
+        require(token_owned_by_to == 0, "already got nft");
+
+        for (uint i; i<inviteMembersMap[to].length; i++) {
+            require(inviteMembersMap[to][i] != (msg.sender), "already invited");
+        }
+
+        inviteMembersMap[to].push(msg.sender);
+        if (inviteMembersMap[to].length >= invite_nft_requirement) {
+            abi_medal.createNew(to);
+            // inviteMembersMap[to] = new address[](0);
+            delete inviteMembersMap[to];
+        }
     }
 
     // The following functions are overrides required by Solidity.
@@ -127,23 +153,4 @@ contract AbiDao is Governor, GovernorSettings, GovernorCountingSimple, GovernorV
         return super.supportsInterface(interfaceId);
     }
 
-    function inviteNewMember(address to) public {
-        bool inviteState = false;
-
-        uint256 token_owned = abi_medal.balanceOf(msg.sender);
-        require(token_owned == 1, "requires 1 nft");
-        
-        uint256 token_owned_by_to = abi_medal.balanceOf(to);
-        require(token_owned_by_to == 0, "already got nft");
-
-        inviteMembersMap[to].push(msg.sender);
-        if (inviteMembersMap[to].length >= 5) {
-            abi_medal.createNew(to);
-            // inviteMembersMap[to] = [];
-            inviteState = true;
-        }
-        if (inviteState == true) {
-            // inviteMembersMap[to] = [];
-        }
-    }
 }

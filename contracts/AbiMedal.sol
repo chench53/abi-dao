@@ -26,7 +26,7 @@ contract AbiMedal is ERC721URIStorage {
 
     function createNew(address to) public returns(uint256) {
         uint256 newTokenId = tokenCounter;
-        _safeMint(msg.sender, newTokenId);
+        _safeMint(to, newTokenId);
         tokenCounter = tokenCounter + 1;
         return newTokenId;
     }
