@@ -14,13 +14,20 @@ import "./AbiToken.sol";
 contract AbiDao is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, GovernorTimelockControl {
 
     AbiMedal abi_medal;
+    AbiToken abi_token;
     mapping(address => address[]) public inviteMembersMap;
-    uint32 invite_nft_requirement;
-    uint256 invite_token_requirement;
+    uint32 public invite_nft_requirement;
+    uint256 public invite_token_requirement;
+
+    event inviteEvent(
+        uint256 tokenBalace,
+        uint256 tokenBurn
+    );
 
     constructor(
         IVotes _nft, 
         AbiMedal _nft_, 
+        AbiToken _abi_token,
         TimelockController _timelock, 
         uint32 _inviteNftRequirement, 
         uint256 _inviteTokenRequirement
@@ -32,11 +39,12 @@ contract AbiDao is Governor, GovernorSettings, GovernorCountingSimple, GovernorV
         GovernorTimelockControl(_timelock)
     {
         abi_medal = AbiMedal(_nft_);
+        abi_token = AbiToken(_abi_token);
         invite_nft_requirement = _inviteNftRequirement;
         invite_token_requirement = _inviteTokenRequirement;
     }
 
-    function inviteNewMember(address to) public {
+    function inviteNewMember(address to) external {
 
         uint256 token_owned = abi_medal.balanceOf(msg.sender);
         require(token_owned == 1, "requires 1 nft");
@@ -48,10 +56,13 @@ contract AbiDao is Governor, GovernorSettings, GovernorCountingSimple, GovernorV
             require(inviteMembersMap[to][i] != (msg.sender), "already invited");
         }
 
+        emit inviteEvent(abi_token.balanceOf(msg.sender), invite_token_requirement * 10 ** 18);
+
+        abi_token.burn(invite_token_requirement * 10 ** 18);
+
         inviteMembersMap[to].push(msg.sender);
         if (inviteMembersMap[to].length >= invite_nft_requirement) {
             abi_medal.createNew(to);
-            // inviteMembersMap[to] = new address[](0);
             delete inviteMembersMap[to];
         }
     }

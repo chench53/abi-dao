@@ -28,7 +28,13 @@ def _deploy(_inviteNftRequirement=5, _inviteTokenRequirement=100):
     time_lock_contract = deplopy_contract(TimeLock, 3600, [], [])
 
     abi_dao_contract = deplopy_contract(
-        AbiDao, nft_contract, nft_contract, time_lock_contract, _inviteNftRequirement, _inviteTokenRequirement
+        AbiDao, 
+        nft_contract, 
+        nft_contract, 
+        token_contract,
+        time_lock_contract, 
+        _inviteNftRequirement, 
+        _inviteTokenRequirement
     )
 
     return (abi_dao_contract, nft_contract, token_contract)

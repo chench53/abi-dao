@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract AbiToken is ERC20, Ownable {
+contract AbiToken is ERC20, ERC20Burnable, Ownable {
 
     address public contractOwner;
     uint256 public initialSupply;
@@ -13,7 +14,7 @@ contract AbiToken is ERC20, Ownable {
     // wei
     constructor() ERC20("AbiToken", "ABI") {
         contractOwner = msg.sender;
-        initialSupply = 1000000;
+        initialSupply = 1000000 * 10 ** 18;
         _mint(contractOwner, initialSupply);
     }
 
@@ -26,13 +27,13 @@ contract AbiToken is ERC20, Ownable {
         return supplyIncrement;
     }
 
-    function rewward(address to) public {
+    function reward(address to) public {
         uint256 amount = _gerRewardAmount(to);
         transfer(to, amount);
     }
 
     function _gerRewardAmount(address to) internal returns (uint256 amount) {
-        return 500;
+        return 500 * 10 ** 18;
     }
 
 }

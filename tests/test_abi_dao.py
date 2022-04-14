@@ -25,26 +25,31 @@ def test_abi_dao_invite():
 
     users = [get_account(i) for i in range(4)] # invite user[3]
 
-    with pytest.raises(exceptions.VirtualMachineError): # requires 1 nft
+    with pytest.raises(exceptions.VirtualMachineError, match='requires 1 nft'): # requires 1 nft
         abi_dao_contract.inviteNewMember(users[3], {'from': users[1]})
 
     nft_contract.createNew(users[1], {'from': a0}).wait(1)
-    with pytest.raises(exceptions.VirtualMachineError): # already got nft
+    with pytest.raises(exceptions.VirtualMachineError, match='already got nft'): # already got nft
         abi_dao_contract.inviteNewMember(users[1], {'from': users[1]})
 
-    tx = abi_dao_contract.inviteNewMember(users[3], {'from': users[1]})
-    tx.wait(1)
+    with pytest.raises(exceptions.VirtualMachineError, match='burn amount exceeds balance'):
+        abi_dao_contract.inviteNewMember(users[3], {'from': users[1]})
+
+    # get some tokens
+    token_contract.reward(users[1]).wait(1) 
+    breakpoint()
+    abi_dao_contract.inviteNewMember(users[3], {'from': users[1]}).wait(1)
 
     inviteFrom = abi_dao_contract.inviteMembersMap(users[3].address, 0)
     assert inviteFrom == users[1].address
 
     # another inviter
     nft_contract.createNew(users[2], {'from': a0}).wait(1)
+    token_contract.reward(users[2]).wait(1)
     abi_dao_contract.inviteNewMember(users[3], {'from': users[2]}).wait(1)
 
-    with pytest.raises(exceptions.VirtualMachineError): # already invited
+    with pytest.raises(exceptions.VirtualMachineError, match='already invited'): # already invited
         tx = abi_dao_contract.inviteNewMember(users[3], {'from': users[1]})
-
 
     assert nft_contract.balanceOf(users[3]) == 1
 
