@@ -20,6 +20,7 @@ def test_abi_medal():
     # abi_medal.createNew(users[2], {'from': account}).wait(1)
 
     with pytest.raises(exceptions.VirtualMachineError, match='not transferrable'):
+        # breakpoint()
         abi_medal.safeTransferFrom(users[1], users[2], 0, {'from': users[1]})
 
     assert abi_medal.ownerOf(0) == users[1]

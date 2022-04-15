@@ -58,7 +58,7 @@ contract AbiDao is Governor, GovernorSettings, GovernorCountingSimple, GovernorV
 
         emit inviteEvent(abi_token.balanceOf(msg.sender), invite_token_requirement * 10 ** 18);
 
-        abi_token.burn(invite_token_requirement * 10 ** 18);
+        abi_token.burnFrom(msg.sender, invite_token_requirement * 10 ** 18);
 
         inviteMembersMap[to].push(msg.sender);
         if (inviteMembersMap[to].length >= invite_nft_requirement) {
