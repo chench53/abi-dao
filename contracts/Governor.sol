@@ -30,12 +30,14 @@ contract AbiDao is Governor, GovernorSettings, GovernorCountingSimple, GovernorV
         AbiToken _abi_token,
         TimelockController _timelock, 
         uint32 _inviteNftRequirement, 
-        uint256 _inviteTokenRequirement
+        uint256 _inviteTokenRequirement,
+        uint256 _quorumPercentage,
+        uint256 _votingPeriod
     )
         Governor("AbiDao")
-        GovernorSettings(1 /* 1 block */, 45818 /* 1 week */, 1)
+        GovernorSettings(1 /* 1 block */, _votingPeriod, 1)
         GovernorVotes(_nft)
-        GovernorVotesQuorumFraction(66)
+        GovernorVotesQuorumFraction(_quorumPercentage)
         GovernorTimelockControl(_timelock)
     {
         abi_medal = AbiMedal(_nft_);
