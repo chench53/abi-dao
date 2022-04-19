@@ -19,11 +19,14 @@ def create_and_delegate(nft_contract, account, *users):
         tx = nft_contract.delegate(user, {'from': user}) # delegate required to vote
     tx.wait(1)
 
-def reward_tokens(token_contract, contract_owner, to):
+def approve_reward_tokens(token_contract, tokens_owner, executor, to):
     tx = token_contract.gerRewardAmount(to)
     reward_amount = tx.return_value
-    token_contract.approve(contract_owner, reward_amount, {'from': contract_owner})
-    token_contract.reward(to, {'from': contract_owner}).wait(1) 
+    token_contract.approve(executor, reward_amount, {'from': tokens_owner})
+
+def reward_tokens(token_contract, tokens_owner, executor, to):
+    approve_reward_tokens(token_contract, tokens_owner, executor, to)
+    token_contract.reward(to, {'from': tokens_owner}).wait(1)
 
 def queue_and_execute(governor_contract, account, targets, values, calldatas, description):
     """execute succeed proposal"""

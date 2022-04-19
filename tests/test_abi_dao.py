@@ -16,13 +16,18 @@ import pytest
 from web3 import Web3
 
 from scripts.deploy import deplopy_contract, _deploy
-from scripts.setup import create_and_delegate, reward_tokens, queue_and_execute
+from scripts.setup import (
+    create_and_delegate, 
+    reward_tokens, 
+    approve_reward_tokens,
+    queue_and_execute
+)
 from scripts.tools import LOCAL_BLOCKCHAIN, get_account, move_blocks
 
 def test_abi_dao_invite():
     if network.show_active() not in LOCAL_BLOCKCHAIN:
         pytest.skip()
-    abi_dao_contract, nft_contract, token_contract = _deploy(2)
+    abi_dao_contract, nft_contract, token_contract, _ = _deploy(2)
 
     admin = get_account()
 
@@ -38,7 +43,7 @@ def test_abi_dao_invite():
         abi_dao_contract.inviteNewMember(users[3], {'from': users[1]})
 
     # get some tokens
-    reward_tokens(token_contract, admin, users[1])
+    reward_tokens(token_contract, admin, admin, users[1])
     abi_dao_contract.inviteNewMember(users[3], {'from': users[1]}).wait(1)
 
     inviteFrom = abi_dao_contract.inviteMembersMap(users[3].address, 0)
@@ -49,7 +54,7 @@ def test_abi_dao_invite():
     
     # another inviter
     nft_contract.createNew(users[2], {'from': admin}).wait(1)
-    reward_tokens(token_contract, admin, users[2])
+    reward_tokens(token_contract, admin, admin, users[2])
     token_contract.approve(abi_dao_contract, 100 * 10 ** 18, {'from': users[2]}).wait(1)
     abi_dao_contract.inviteNewMember(users[3], {'from': users[2]}).wait(1)
 
@@ -58,11 +63,12 @@ def test_abi_dao_invite():
 
     assert nft_contract.balanceOf(users[3]) == 1
 
+
 def test_abi_dao_vote():
     testing_voting_period = 3
     if network.show_active() not in LOCAL_BLOCKCHAIN:
         pytest.skip()
-    abi_dao_contract, nft_contract, token_contract = _deploy(2, _voting_period=testing_voting_period)
+    abi_dao_contract, nft_contract, token_contract, time_lock_contract = _deploy(2, _voting_period=testing_voting_period)
 
     admin = get_account()
     users = [get_account(i) for i in range(5)] 
@@ -74,7 +80,7 @@ def test_abi_dao_vote():
     targets, values, calldatas, description = [token_contract], [0], [reward_calldata], "Proposal: Give users4 some tokens"
 
     assert token_contract.balanceOf(admin) == Web3.toWei(1000000, 'ether')
-    # assert token_contract.balanceOf(users[4]) == 0
+    assert token_contract.balanceOf(users[4]) == 0
 
     create_and_delegate(nft_contract, admin, *[users[i] for i in range(1, 5)])
 
@@ -93,7 +99,6 @@ def test_abi_dao_vote():
     tx = abi_dao_contract.castVote(propose_id, 1, {'from': users[2]})
     tx.wait(1)
     assert tx.events["VoteCast"]['weight'] == 1
-
     assert abi_dao_contract.state(propose_id) == 1 # Active
 
     # Execute the Proposal
@@ -102,6 +107,7 @@ def test_abi_dao_vote():
         move_blocks(testing_voting_period)
     assert abi_dao_contract.state(propose_id) == 4 # Succeeded
 
+    approve_reward_tokens(token_contract, admin, time_lock_contract, users[4])
     queue_and_execute(abi_dao_contract, admin, targets, values, calldatas, description)
-    assert token_contract.balanceOf(admin) == Web3.toWei(1000500, 'ether')
-    # breakpoint()
+    assert token_contract.balanceOf(admin) == Web3.toWei(999500, 'ether')
+    assert token_contract.balanceOf(users[4]) == Web3.toWei(500, 'ether') # users4 reward

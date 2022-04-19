@@ -56,7 +56,7 @@ def _deploy(_inviteNftRequirement=5, _inviteTokenRequirement=100, _quorum_percen
     #     grant executor role {EXECUTOR_ROLE} for {account}: 
     #     {time_lock_contract.hasRole(EXECUTOR_ROLE, account)}
     # ''')
-    return (abi_dao_contract, nft_contract, token_contract)
+    return (abi_dao_contract, nft_contract, token_contract, time_lock_contract)
 
 def main():
     _deploy()
