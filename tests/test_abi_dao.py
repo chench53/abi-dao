@@ -16,7 +16,7 @@ import pytest
 from web3 import Web3
 
 from scripts.deploy import deplopy_contract, _deploy
-from scripts.setup import create_and_delegate, queue_and_execute
+from scripts.setup import create_and_delegate, reward_tokens, queue_and_execute
 from scripts.tools import LOCAL_BLOCKCHAIN, get_account, move_blocks
 
 def test_abi_dao_invite():
@@ -38,7 +38,7 @@ def test_abi_dao_invite():
         abi_dao_contract.inviteNewMember(users[3], {'from': users[1]})
 
     # get some tokens
-    token_contract.reward(users[1]).wait(1) 
+    reward_tokens(token_contract, admin, users[1])
     abi_dao_contract.inviteNewMember(users[3], {'from': users[1]}).wait(1)
 
     inviteFrom = abi_dao_contract.inviteMembersMap(users[3].address, 0)
@@ -49,7 +49,7 @@ def test_abi_dao_invite():
     
     # another inviter
     nft_contract.createNew(users[2], {'from': admin}).wait(1)
-    token_contract.reward(users[2]).wait(1)
+    reward_tokens(token_contract, admin, users[2])
     token_contract.approve(abi_dao_contract, 100 * 10 ** 18, {'from': users[2]}).wait(1)
     abi_dao_contract.inviteNewMember(users[3], {'from': users[2]}).wait(1)
 
@@ -69,8 +69,8 @@ def test_abi_dao_vote():
 
     # Create a Proposal
     print("Create a Proposal")
-    # reward_calldata = token_contract.reward.encode_input(users[4])
-    reward_calldata = token_contract.addSupply.encode_input()
+    reward_calldata = token_contract.reward.encode_input(users[4])
+    # reward_calldata = token_contract.addSupply.encode_input()
     targets, values, calldatas, description = [token_contract], [0], [reward_calldata], "Proposal: Give users4 some tokens"
 
     assert token_contract.balanceOf(admin) == Web3.toWei(1000000, 'ether')

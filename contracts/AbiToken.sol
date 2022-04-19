@@ -10,6 +10,7 @@ contract AbiToken is ERC20, ERC20Burnable {
     address public contractOwner;
     uint256 public initialSupply;
     uint256 public supplyIncrement; 
+    // uint256 public rewardAmount;
 
     // wei
     constructor(uint256 _supply_increment) ERC20("AbiToken", "ABI") {
@@ -29,12 +30,12 @@ contract AbiToken is ERC20, ERC20Burnable {
     }
 
     function reward(address to) public {
-        uint256 amount = _gerRewardAmount(to);
-        transfer(to, amount);
-        // transferFrom(contractOwner, to, amount);
+        uint256 amount = gerRewardAmount(to);
+        // transfer(to, amount);
+        transferFrom(contractOwner, to, amount);
     }
 
-    function _gerRewardAmount(address to) internal returns (uint256 amount) {
+    function gerRewardAmount(address to) public returns (uint256 amount) {
         return 500 * 10 ** 18;
     }
 
